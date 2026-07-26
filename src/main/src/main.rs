@@ -1,8 +1,10 @@
-use std::net::SocketAddr;
-
 use clap::Parser;
 
+use crate::{config::Config, telemetry::init_telemetry};
+
+mod config;
 mod shutdown;
+mod telemetry;
 
 #[derive(Parser)]
 pub struct Args {
@@ -13,22 +15,22 @@ pub struct Args {
 #[derive(clap::Subcommand)]
 pub enum Command {
     /// Serve the Tactica API
-    Serve {
-        /// The address to listen on
-        #[clap(long, default_value = "0.0.0.0:8080")]
-        listen_addr: SocketAddr,
-    }
+    Serve
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+    let config = Config::load().expect("Failed to load configuration");
+    init_telemetry(config.telemetry).expect("Failed to initialize telemetry");
 
     match args.command {
-        Command::Serve { listen_addr } => {
-            let listener = tokio::net::TcpListener::bind(listen_addr)
+        Command::Serve => {
+            let listener = tokio::net::TcpListener::bind(config.server.listen_addr)
                 .await
                 .expect("Failed to bind to address");
+
+            tracing::info!("Listening on {}", listener.local_addr().unwrap());
 
             let router = tactica_api::router();
 

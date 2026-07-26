@@ -1,7 +1,7 @@
 pub async fn shutdown_signal() {
     let ctrl_c = async {
         if let Err(error) = tokio::signal::ctrl_c().await {
-            eprintln!("Failed to listen for Ctrl+C: {}", error);
+            tracing::error!("Failed to listen for Ctrl+C: {}", error);
         }
     };
 
@@ -13,7 +13,7 @@ pub async fn shutdown_signal() {
             Ok(mut stream) => {
                 stream.recv().await;
             }
-            Err(error) => eprintln!("failed to listen for SIGTERM: {error}"),
+            Err(error) => tracing::error!("failed to listen for SIGTERM: {error}"),
         }
     };
 
