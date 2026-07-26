@@ -8,3 +8,6 @@ authors.workspace = true
 
 [dependencies]
 axum.workspace = true
+tracing.workspace = true
+tower.workspace = true
+tower-http.workspace = true
