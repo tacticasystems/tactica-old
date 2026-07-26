@@ -1,0 +1,5 @@
+[settings]
+experimental = true
+
+[tools]
+rust = "1.96.0"
