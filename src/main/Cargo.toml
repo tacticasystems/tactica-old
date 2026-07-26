@@ -1,0 +1,12 @@
+[package]
+name = "tactica"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+tokio.workspace = true
+clap.workspace = true
+tactica-api.workspace = true
