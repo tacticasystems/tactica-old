@@ -2,6 +2,8 @@ use std::net::SocketAddr;
 
 use clap::Parser;
 
+mod shutdown;
+
 #[derive(Parser)]
 pub struct Args {
     #[clap(subcommand)]
@@ -31,6 +33,7 @@ async fn main() {
             let router = tactica_api::router();
 
             tactica_api::serve(listener, router)
+                .with_graceful_shutdown(shutdown::shutdown_signal())
                 .await
                 .expect("Failed to serve API");
         }
