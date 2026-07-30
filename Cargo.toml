@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
-  "src/api",
+  "src/api", "src/kernel",
   "src/main",
 ]
 
@@ -27,3 +27,4 @@ http = "1.5"
 # Core Components
 tactica-api.path = "./src/api"
 tactica-db.path = "./src/db"
+tactica-kernel.path = "./src/kernel"

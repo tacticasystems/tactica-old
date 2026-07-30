@@ -1,0 +1,16 @@
+[package]
+name = "tactica-kernel"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+axum = ["serde", "dep:axum"]
+serde = ["dep:serde"]
+
+[dependencies]
+axum = { optional = true, workspace = true }
+serde = { optional = true, workspace = true }
+http.workspace = true
