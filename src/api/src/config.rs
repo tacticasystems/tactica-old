@@ -35,7 +35,7 @@ impl Default for ApiConfig {
             public_base_url: Url::parse("http://localhost:8080").expect("Failed to build default config"),
             request_timeout: Duration::from_secs(30),
             graceful_shutdown_timeout: Duration::from_secs(10),
-            max_request_body_size: 1 * 1024, // 1 MiB
+            max_request_body_size: 1 * 1024 * 1024, // 1 MiB
             cors_allowed_origins: vec![Url::parse("http://localhost:5173").expect("Failed to build default config")],
             proxy_mode: ProxyMode::Direct
         }

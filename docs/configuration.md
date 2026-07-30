@@ -39,7 +39,7 @@ the process exits while loading configuration.
 | `api.public_base_url` | URL | `http://localhost:8080` | `TACTICA_API__PUBLIC_BASE_URL` | Public URL for the running API. |
 | `api.request_timeout` | duration | 30 seconds | `TACTICA_API__REQUEST_TIMEOUT` | Request timeout value. |
 | `api.graceful_shutdown_timeout` | duration | 10 seconds | `TACTICA_API__GRACEFUL_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout value. |
-| `api.max_request_body_size` | unsigned integer (bytes) | 1 KiB (1024 bytes) | `TACTICA_API__MAX_REQUEST_BODY_SIZE` | Maximum request body size. |
+| `api.max_request_body_size` | unsigned integer (bytes) | 1 MiB (1048576 bytes) | `TACTICA_API__MAX_REQUEST_BODY_SIZE` | Maximum request body size. |
 | `api.cors_allowed_origins` | list of URLs | `[http://localhost:5173]` | `TACTICA_API__CORS_ALLOWED_ORIGINS` | Origins allowed by CORS. |
 | `api.proxy_mode` | `Direct` or `Trusted` | `Direct` | `TACTICA_API__PROXY_MODE` | Whether requests are treated as coming directly from the client or through a trusted proxy. |
 
@@ -87,9 +87,8 @@ export TACTICA_API__CORS_ALLOWED_ORIGINS='["https://app.example.com"]'
 export TACTICA_API__PROXY_MODE='Direct'
 ```
 
-The code currently sets `max_request_body_size` to `1 * 1024`, which is 1024
-bytes (1 KiB). Its inline Rust comment says “1 MiB”; the value, rather than
-that comment, is the effective default.
+The code currently sets `max_request_body_size` to `1 * 1024 * 1024`, which is
+1048576 bytes (1 MiB).
 
 ## telemetry
 
