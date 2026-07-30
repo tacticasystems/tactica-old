@@ -1,11 +1,11 @@
 use figment::{Figment, providers::Env};
 use serde::Deserialize;
-use std::net::SocketAddr;
+use tactica_api::config::ApiConfig;
 
 #[derive(Deserialize)]
 pub struct Config {
     #[serde(default)]
-    pub server: ServerConfig,
+    pub api: ApiConfig,
 
     #[serde(default)]
     pub telemetry: TelemetryConfig,
@@ -16,26 +16,6 @@ impl Config {
         Figment::new()
             .merge(Env::prefixed("TACTICA_").split("__"))
             .extract()
-    }
-}
-
-#[derive(Deserialize)]
-pub struct ServerConfig {
-    #[serde(default = "ServerConfig::default_listen_addr")]
-    pub listen_addr: SocketAddr,
-}
-
-impl Default for ServerConfig {
-    fn default() -> Self {
-        ServerConfig {
-            listen_addr: ServerConfig::default_listen_addr(),
-        }
-    }
-}
-
-impl ServerConfig {
-    fn default_listen_addr() -> SocketAddr {
-        ([0, 0, 0, 0], 8080).into()
     }
 }
 

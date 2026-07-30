@@ -3,7 +3,11 @@ use axum::{Router, routing::get};
 pub use axum::serve;
 use tower_http::request_id::MakeRequestUuid;
 
-pub fn router() -> Router {
+use crate::config::ApiConfig;
+
+pub mod config;
+
+pub fn router(_cfg: ApiConfig) -> Router {
     Router::new()
         .route("/healthz", get(|| async { "OK" }))
 

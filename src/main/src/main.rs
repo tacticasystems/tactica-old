@@ -26,13 +26,13 @@ async fn main() {
 
     match args.command {
         Command::Serve => {
-            let listener = tokio::net::TcpListener::bind(config.server.listen_addr)
+            let listener = tokio::net::TcpListener::bind(config.api.bind_addr.clone())
                 .await
                 .expect("Failed to bind to address");
 
             tracing::info!("Listening on {}", listener.local_addr().unwrap());
 
-            let router = tactica_api::router();
+            let router = tactica_api::router(config.api);
 
             tactica_api::serve(listener, router)
                 .with_graceful_shutdown(shutdown::shutdown_signal())
