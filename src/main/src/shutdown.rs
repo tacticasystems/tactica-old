@@ -2,6 +2,7 @@ pub async fn shutdown_signal() {
     let ctrl_c = async {
         if let Err(error) = tokio::signal::ctrl_c().await {
             tracing::error!("Failed to listen for Ctrl+C: {}", error);
+            std::future::pending::<()>().await;
         }
     };
 
@@ -13,7 +14,10 @@ pub async fn shutdown_signal() {
             Ok(mut stream) => {
                 stream.recv().await;
             }
-            Err(error) => tracing::error!("failed to listen for SIGTERM: {error}"),
+            Err(error) => {
+                tracing::error!("failed to listen for SIGTERM: {error}");
+                std::future::pending::<()>().await;
+            }
         }
     };
 
@@ -29,7 +33,7 @@ where
     T: Future<Output = ()>,
 {
     tokio::select! {
-        () = ctrl_c => {},
-        () = terminate => {},
+        () = ctrl_c => { tracing::debug!("received ^C") },
+        () = terminate => { tracing::debug!("received SIGTERM") },
     }
 }

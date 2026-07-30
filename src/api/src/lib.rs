@@ -1,19 +1,19 @@
 use axum::{Router, routing::get};
 
 pub use axum::serve;
-use tower_http::request_id::MakeRequestUuid;
+use http::StatusCode;
+use tower::{ServiceBuilder};
+use tower_http::{cors::{AllowOrigin, CorsLayer}, limit::RequestBodyLimitLayer, request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer}, timeout::TimeoutLayer, trace::TraceLayer};
 
 use crate::config::ApiConfig;
 
 pub mod config;
 
-pub fn router(_cfg: ApiConfig) -> Router {
-    Router::new()
-        .route("/healthz", get(|| async { "OK" }))
-
-        .layer(tower_http::request_id::PropagateRequestIdLayer::x_request_id())
+pub fn router(cfg: ApiConfig) -> Router {
+    let middleware = ServiceBuilder::new()
+        .layer(PropagateRequestIdLayer::x_request_id())
         .layer(
-            tower_http::trace::TraceLayer::new_for_http()
+            TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {
                     let request_id = request
                         .headers()
@@ -39,5 +39,30 @@ pub fn router(_cfg: ApiConfig) -> Router {
                     );
                 })
         )
-        .layer(tower_http::request_id::SetRequestIdLayer::x_request_id(MakeRequestUuid::default()))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(
+                    AllowOrigin::list(
+                        cfg
+                            .cors_allowed_origins
+                            .iter()
+                            .map(|e| e.as_str().parse().expect("Invalid CORS origin"))
+                    )
+                )
+                .allow_credentials(true)
+                .allow_methods(vec![
+                    http::Method::GET,
+                    http::Method::PUT,
+                    http::Method::POST,
+                    http::Method::DELETE,
+                    http::Method::HEAD,
+                ])
+        )
+        .layer(RequestBodyLimitLayer::new(cfg.max_request_body_size))
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, cfg.request_timeout))
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid::default()));
+
+    Router::new()
+        .route("/healthz", get(|| async { "OK" }))
+        .layer(middleware)
 }
