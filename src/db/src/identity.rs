@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use newtype_uuid::GenericUuid;
 use tactica_module_identity::{models::{account::{Account, AccountId, CreateAccountError, CreateAccountRequest}, identity::{CreateIdentityError, CreateIdentityRequest, Identity, IdentityId}}, ports::{AccountRepository, IdentityRepository}};
 use uuid::Uuid;
-use sqlx::{Executor, error::DatabaseError, postgres::PgDatabaseError};
+use sqlx::Executor;
 
 use crate::Postgres;
 
