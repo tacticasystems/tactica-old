@@ -19,7 +19,7 @@ pub mod state;
 
 pub use state::AppState;
 
-pub fn router(cfg: ApiConfig, state: AppState) -> Router<AppState>
+pub fn router(cfg: ApiConfig, state: AppState) -> Router
 {
     let middleware = ServiceBuilder::new()
         .layer(PropagateRequestIdLayer::x_request_id())

@@ -1,0 +1,5 @@
+[common]
+database-url-var = "TACTICA_DATABASE__URL"
+
+[migrate]
+migrations-dir = "src/db/migrations"

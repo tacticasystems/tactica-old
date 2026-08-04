@@ -1,6 +1,7 @@
 use figment::{Figment, providers::Env};
 use serde::Deserialize;
 use tactica_api::config::ApiConfig;
+use tactica_db::config::DatabaseConfig;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -9,6 +10,9 @@ pub struct Config {
 
     #[serde(default)]
     pub telemetry: TelemetryConfig,
+
+    #[serde(default)]
+    pub database: DatabaseConfig,
 }
 
 impl Config {

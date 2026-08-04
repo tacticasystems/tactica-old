@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use clap::Parser;
+use tactica_api::AppState;
 use tokio::sync::oneshot;
 
 use crate::{config::Config, shutdown::shutdown_signal, telemetry::init_telemetry};
@@ -36,9 +39,26 @@ async fn main() -> anyhow::Result<()> {
 
             tracing::info!("Listening on {}", listener.local_addr().unwrap());
 
-            let router = tactica_api::router(config.api);
+            let db = tactica_db::Postgres::new(config.database)
+                .await
+                .expect("Failed to initialize database");
 
-            let server = tactica_api::serve(listener, router)
+            let identity_service = tactica_module_identity::service::Service::new(
+                db.clone(),
+                db.clone(),
+            );
+
+            let router = tactica_api::router(
+                config.api,
+                AppState::new(
+                    Arc::new(identity_service),
+                )
+            );
+
+            let server = tactica_api::serve(
+                listener,
+                router,
+            )
                 .with_graceful_shutdown(async move {
                     let _ = shutdown_rx.await;
                 });

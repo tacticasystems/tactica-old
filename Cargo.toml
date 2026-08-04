@@ -7,7 +7,7 @@ members = [
   "src/api",
 
   # Modules
-  "src/modules/identity",
+  "src/modules/identity", "src/db",
 ]
 
 [workspace.package]
@@ -42,4 +42,8 @@ derive_more = { version = "2.1", features = ["from"] }
 # Core Components
 tactica-api.path = "./src/api"
 tactica-kernel.path = "./src/kernel"
+tactica-db.path = "./src/db"
 tactica-module-identity.path = "./src/modules/identity"
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3
