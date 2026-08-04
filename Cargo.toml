@@ -5,6 +5,9 @@ members = [
   "src/main",
   "src/kernel",
   "src/api",
+
+  # Modules
+  "src/modules/identity",
 ]
 
 [workspace.package]
@@ -34,7 +37,9 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
 uuid = { version = "1", features = ["serde"] }
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "chrono", "uuid", "json", "migrate", "macros"] }
+derive_more = { version = "2.1", features = ["from"] }
 
 # Core Components
 tactica-api.path = "./src/api"
 tactica-kernel.path = "./src/kernel"
+tactica-module-identity.path = "./src/modules/identity"

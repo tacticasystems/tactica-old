@@ -14,5 +14,7 @@ tower-http.workspace = true
 url.workspace = true
 serde.workspace = true
 http.workspace = true
+thiserror.workspace = true
 
 tactica-kernel = { workspace = true, features = ["axum"] }
+tactica-module-identity.workspace = true

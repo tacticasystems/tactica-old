@@ -1,0 +1,19 @@
+[package]
+name = "tactica-module-identity"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+newtype-uuid.workspace = true
+newtype-uuid-macros.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+derive_more.workspace = true
+chrono.workspace = true
+http.workspace = true
+
+tactica-kernel.workspace = true

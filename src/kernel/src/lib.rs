@@ -11,7 +11,7 @@ macro_rules! impl_created_at {
                     .get_timestamp()
                     .map(|ts| {
                         let (secs, nanos) = ts.to_unix();
-                        DateTime::from_timestamp(secs as i64, nanos).unwrap()
+                        chrono::DateTime::from_timestamp(secs as i64, nanos).unwrap()
                     })
                     .unwrap()
             }

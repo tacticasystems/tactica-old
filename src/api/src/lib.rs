@@ -14,8 +14,13 @@ use tower_http::{
 use crate::config::ApiConfig;
 
 pub mod config;
+pub mod handlers;
+pub mod state;
 
-pub fn router(cfg: ApiConfig) -> Router {
+pub use state::AppState;
+
+pub fn router(cfg: ApiConfig, state: AppState) -> Router<AppState>
+{
     let middleware = ServiceBuilder::new()
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(
@@ -76,8 +81,11 @@ pub fn router(cfg: ApiConfig) -> Router {
         .route("/healthz", get(|| async { "OK" }))
         .nest("/api", api_router())
         .layer(middleware)
+        .with_state(state)
 }
 
-fn api_router() -> Router {
+fn api_router() -> Router<AppState>
+{
     Router::new()
+        .merge(handlers::identity::router())
 }
