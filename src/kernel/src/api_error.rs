@@ -1,8 +1,6 @@
 use std::error::Error;
 
-use axum::{Json, response::IntoResponse};
 use http::StatusCode;
-use serde::{Deserialize, Serialize};
 
 pub trait ApiError: Error + Send + Sync + 'static {
     fn message(&self) -> String;
@@ -11,7 +9,7 @@ pub trait ApiError: Error + Send + Sync + 'static {
 }
 
 #[cfg(feature = "axum")]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ApiErrorJson {
     pub message: String,
     pub code: &'static str,
@@ -27,13 +25,13 @@ where
 {
     fn from(error: E) -> Self {
         Self {
-            error: Box::new(error)
+            error: Box::new(error),
         }
     }
 }
 
 #[cfg(feature = "axum")]
-impl IntoResponse for ApiErrorResponse {
+impl axum::response::IntoResponse for ApiErrorResponse {
     fn into_response(self) -> axum::response::Response {
         let status = self.error.status_code();
         let body = ApiErrorJson {
@@ -41,7 +39,7 @@ impl IntoResponse for ApiErrorResponse {
             code: self.error.code(),
         };
 
-        (status, Json(body)).into_response()
+        (status, axum::Json(body)).into_response()
     }
 }
 

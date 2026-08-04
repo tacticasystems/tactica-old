@@ -7,7 +7,7 @@ repository.workspace = true
 authors.workspace = true
 
 [features]
-axum = ["serde", "dep:axum"]
+axum = ["dep:axum", "serde"]
 serde = ["dep:serde"]
 
 [dependencies]

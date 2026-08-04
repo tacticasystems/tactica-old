@@ -1,8 +1,10 @@
 [workspace]
 resolver = "3"
 members = [
-  "src/api", "src/kernel",
+  # Core Components
   "src/main",
+  "src/kernel",
+  "src/api",
 ]
 
 [workspace.package]
@@ -12,8 +14,10 @@ repository = "https://github.com/tacticasystems/tactica"
 authors = ["Tactica Team"]
 
 [workspace.dependencies]
+async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 anyhow = "1.0"
+cel = { version = "0.14", features = ["structs", "chrono"] }
 tokio = { version = "1.53", features = ["full"] }
 clap = { version = "4.6", features = ["derive"] }
 figment = { version = "0.10", features = ["env"] }
@@ -24,8 +28,13 @@ tower = "0.5"
 tower-http = { version = "0.7", features = ["request-id", "trace", "cors", "timeout", "limit"] }
 url = { version = "2.5", features = ["serde"] }
 http = "1.5"
+newtype-uuid = { version = "1.4", features = ["serde", "v7"] }
+newtype-uuid-macros = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
+uuid = { version = "1", features = ["serde"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "chrono", "uuid", "json", "migrate", "macros"] }
 
 # Core Components
 tactica-api.path = "./src/api"
-tactica-db.path = "./src/db"
 tactica-kernel.path = "./src/kernel"

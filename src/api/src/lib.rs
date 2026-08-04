@@ -2,8 +2,14 @@ use axum::{Router, routing::get};
 
 pub use axum::serve;
 use http::StatusCode;
-use tower::{ServiceBuilder};
-use tower_http::{cors::{AllowOrigin, CorsLayer}, limit::RequestBodyLimitLayer, request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer}, timeout::TimeoutLayer, trace::TraceLayer};
+use tower::ServiceBuilder;
+use tower_http::{
+    cors::{AllowOrigin, CorsLayer},
+    limit::RequestBodyLimitLayer,
+    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+    timeout::TimeoutLayer,
+    trace::TraceLayer,
+};
 
 use crate::config::ApiConfig;
 
@@ -31,24 +37,25 @@ pub fn router(cfg: ApiConfig) -> Router {
                 .on_request(|_request: &axum::http::Request<_>, _span: &tracing::Span| {
                     tracing::info!("request received");
                 })
-                .on_response(|response: &axum::http::Response<_>, latency: std::time::Duration, _span: &tracing::Span| {
-                    tracing::info!(
-                        status = %response.status(),
-                        latency_ms = latency.as_millis(),
-                        "response sent",
-                    );
-                })
+                .on_response(
+                    |response: &axum::http::Response<_>,
+                     latency: std::time::Duration,
+                     _span: &tracing::Span| {
+                        tracing::info!(
+                            status = %response.status(),
+                            latency_ms = latency.as_millis(),
+                            "response sent",
+                        );
+                    },
+                ),
         )
         .layer(
             CorsLayer::new()
-                .allow_origin(
-                    AllowOrigin::list(
-                        cfg
-                            .cors_allowed_origins
-                            .iter()
-                            .map(|e| e.as_str().parse().expect("Invalid CORS origin"))
-                    )
-                )
+                .allow_origin(AllowOrigin::list(
+                    cfg.cors_allowed_origins
+                        .iter()
+                        .map(|e| e.as_str().parse().expect("Invalid CORS origin")),
+                ))
                 .allow_credentials(true)
                 .allow_methods(vec![
                     http::Method::GET,
@@ -56,13 +63,21 @@ pub fn router(cfg: ApiConfig) -> Router {
                     http::Method::POST,
                     http::Method::DELETE,
                     http::Method::HEAD,
-                ])
+                ]),
         )
         .layer(RequestBodyLimitLayer::new(cfg.max_request_body_size))
-        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, cfg.request_timeout))
+        .layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            cfg.request_timeout,
+        ))
         .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid::default()));
 
     Router::new()
         .route("/healthz", get(|| async { "OK" }))
+        .nest("/api", api_router())
         .layer(middleware)
+}
+
+fn api_router() -> Router {
+    Router::new()
 }
