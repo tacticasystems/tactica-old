@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use sqlx::postgres::{PgPool, PgConnectOptions, PgPoolOptions};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 
 pub mod config;
 pub mod identity;
@@ -17,9 +17,8 @@ impl Postgres {
             .max_connections(config.max_connections)
             .idle_timeout(config.idle_timeout)
             .min_connections(config.min_connections)
-            .connect_with(
-                PgConnectOptions::from_str(&config.url)?
-            ).await?;
+            .connect_with(PgConnectOptions::from_str(&config.url)?)
+            .await?;
 
         Ok(Self { pool })
     }

@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter};
 use derive_more::From;
+use std::fmt::{Display, Formatter};
 
 use newtype_uuid_macros::impl_typed_uuid_kinds;
 use tactica_kernel::{api_error::ApiError, impl_created_at};

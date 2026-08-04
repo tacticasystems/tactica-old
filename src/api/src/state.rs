@@ -8,15 +8,13 @@ pub struct AppState {
     pub(crate) identity_service: Arc<dyn IdentityService>,
 }
 
-impl AppState
-{
+impl AppState {
     pub fn new(identity_service: Arc<dyn IdentityService>) -> Self {
         Self { identity_service }
     }
 }
 
-impl FromRef<AppState> for Arc<dyn IdentityService>
-{
+impl FromRef<AppState> for Arc<dyn IdentityService> {
     fn from_ref(state: &AppState) -> Self {
         state.identity_service.clone()
     }

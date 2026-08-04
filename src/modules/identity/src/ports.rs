@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::models::account::{Account, CreateAccountRequest, CreateAccountError};
+use crate::models::account::{Account, CreateAccountError, CreateAccountRequest};
 use crate::models::identity::{CreateIdentityError, CreateIdentityRequest, Identity};
 
 #[async_trait]
@@ -11,7 +11,10 @@ pub trait IdentityService: Send + Sync + 'static {
     ///
     /// - [CreateAccountError::Duplicate] if an [Account] with the same
     ///   [EmailAddress] already exists.
-    async fn create_account(&self, req: &CreateAccountRequest) -> Result<Account, CreateAccountError>;
+    async fn create_account(
+        &self,
+        req: &CreateAccountRequest,
+    ) -> Result<Account, CreateAccountError>;
 }
 
 /// `AccountRepository` represents a store of Account data.
@@ -23,11 +26,17 @@ pub trait AccountRepository: Send + Sync + 'static {
     ///
     /// - MUST return [CreateAccountError::Duplicate] if an [Account] with the
     ///   same [EmailAddress] already exists.
-    async fn create_account(&self, req: &CreateAccountRequest) -> Result<Account, CreateAccountError>;
+    async fn create_account(
+        &self,
+        req: &CreateAccountRequest,
+    ) -> Result<Account, CreateAccountError>;
 }
 
 /// `IdentityRepository` represents a store of account identities.
 #[async_trait]
 pub trait IdentityRepository: Send + Sync + 'static {
-    async fn create_identity(&self, req: &CreateIdentityRequest) -> Result<Identity, CreateIdentityError>;
+    async fn create_identity(
+        &self,
+        req: &CreateIdentityRequest,
+    ) -> Result<Identity, CreateIdentityError>;
 }

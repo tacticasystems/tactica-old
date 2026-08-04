@@ -3,15 +3,16 @@ use std::sync::Arc;
 use axum::{Json, Router, debug_handler, extract::State, routing::post};
 use serde::Deserialize;
 use tactica_kernel::api_error::{ApiError, ApiResult};
-use tactica_module_identity::{models::account::{Account, CreateAccountRequest, EmailAddress, EmailAddressError}, ports::IdentityService};
+use tactica_module_identity::{
+    models::account::{Account, CreateAccountRequest, EmailAddress, EmailAddressError},
+    ports::IdentityService,
+};
 use thiserror::Error;
 
 use crate::AppState;
 
-pub fn router() -> Router<AppState>
-{
-    Router::new()
-        .route("/auth/register", post(create_account))
+pub fn router() -> Router<AppState> {
+    Router::new().route("/auth/register", post(create_account))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

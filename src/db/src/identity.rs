@@ -1,15 +1,24 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use newtype_uuid::GenericUuid;
-use tactica_module_identity::{models::{account::{Account, AccountId, CreateAccountError, CreateAccountRequest}, identity::{CreateIdentityError, CreateIdentityRequest, Identity, IdentityId}}, ports::{AccountRepository, IdentityRepository}};
-use uuid::Uuid;
 use sqlx::Executor;
+use tactica_module_identity::{
+    models::{
+        account::{Account, AccountId, CreateAccountError, CreateAccountRequest},
+        identity::{CreateIdentityError, CreateIdentityRequest, Identity, IdentityId},
+    },
+    ports::{AccountRepository, IdentityRepository},
+};
+use uuid::Uuid;
 
 use crate::Postgres;
 
 #[async_trait]
 impl AccountRepository for Postgres {
-    async fn create_account(&self, req: &CreateAccountRequest) -> Result<Account, CreateAccountError> {
+    async fn create_account(
+        &self,
+        req: &CreateAccountRequest,
+    ) -> Result<Account, CreateAccountError> {
         let mut tx = self
             .pool
             .begin()
@@ -25,17 +34,17 @@ impl AccountRepository for Postgres {
             email,
         );
 
-        tx.execute(query)
-            .await
-            .map_err(|e| {
-                if let sqlx::Error::Database(db_err) = &e {
-                    if db_err.is_unique_violation() {
-                        return CreateAccountError::Duplicate { email: req.email().clone() };
-                    }
+        tx.execute(query).await.map_err(|e| {
+            if let sqlx::Error::Database(db_err) = &e {
+                if db_err.is_unique_violation() {
+                    return CreateAccountError::Duplicate {
+                        email: req.email().clone(),
+                    };
                 }
+            }
 
-                CreateAccountError::Unknown(e.into())
-            })?;
+            CreateAccountError::Unknown(e.into())
+        })?;
 
         tx.commit()
             .await
@@ -43,14 +52,17 @@ impl AccountRepository for Postgres {
 
         Ok(Account::new(
             AccountId::from_untyped_uuid(id),
-            req.email().clone()
+            req.email().clone(),
         ))
     }
 }
 
 #[async_trait]
 impl IdentityRepository for Postgres {
-    async fn create_identity(&self, req: &CreateIdentityRequest) -> Result<Identity, CreateIdentityError> {
+    async fn create_identity(
+        &self,
+        req: &CreateIdentityRequest,
+    ) -> Result<Identity, CreateIdentityError> {
         let mut tx = self
             .pool
             .begin()
@@ -76,7 +88,7 @@ impl IdentityRepository for Postgres {
 
         Ok(Identity::new(
             IdentityId::from_untyped_uuid(id),
-            req.account_id().clone()
+            req.account_id().clone(),
         ))
     }
 }

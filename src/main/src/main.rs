@@ -19,7 +19,7 @@ pub struct Args {
 #[derive(clap::Subcommand)]
 pub enum Command {
     /// Serve the Tactica API
-    Serve
+    Serve,
 }
 
 #[tokio::main]
@@ -43,25 +43,14 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .expect("Failed to initialize database");
 
-            let identity_service = tactica_module_identity::service::Service::new(
-                db.clone(),
-                db.clone(),
-            );
+            let identity_service =
+                tactica_module_identity::service::Service::new(db.clone(), db.clone());
 
-            let router = tactica_api::router(
-                config.api,
-                AppState::new(
-                    Arc::new(identity_service),
-                )
-            );
+            let router = tactica_api::router(config.api, AppState::new(Arc::new(identity_service)));
 
-            let server = tactica_api::serve(
-                listener,
-                router,
-            )
-                .with_graceful_shutdown(async move {
-                    let _ = shutdown_rx.await;
-                });
+            let server = tactica_api::serve(listener, router).with_graceful_shutdown(async move {
+                let _ = shutdown_rx.await;
+            });
 
             let mut server_task = tokio::spawn(async move { server.await });
 
