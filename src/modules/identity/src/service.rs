@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::{models::account, ports};
+use crate::{models::account, models::identity, ports};
 
 #[derive(Debug, Clone)]
 pub struct Service<AR, IR>
@@ -9,7 +9,7 @@ where
     IR: ports::IdentityRepository,
 {
     account_repository: AR,
-    _identity_repository: IR,
+    identity_repository: IR,
 }
 
 impl<AR, IR> Service<AR, IR>
@@ -20,7 +20,7 @@ where
     pub fn new(account_repository: AR, identity_repository: IR) -> Self {
         Self {
             account_repository,
-            _identity_repository: identity_repository,
+            identity_repository,
         }
     }
 }
@@ -36,5 +36,12 @@ where
         req: &account::CreateAccountRequest,
     ) -> Result<account::Account, account::CreateAccountError> {
         self.account_repository.create_account(req).await
+    }
+
+    async fn create_identity(
+        &self,
+        req: &identity::CreateIdentityRequest,
+    ) -> Result<identity::Identity, identity::CreateIdentityError> {
+        self.identity_repository.create_identity(req).await
     }
 }

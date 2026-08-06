@@ -1908,6 +1908,7 @@ dependencies = [
  "async-trait",
  "newtype-uuid",
  "serde",
+ "serde_json",
  "sqlx",
  "tactica-kernel",
  "tactica-module-identity",
@@ -1934,6 +1935,8 @@ dependencies = [
  "http",
  "newtype-uuid",
  "newtype-uuid-macros",
+ "serde",
+ "serde_json",
  "tactica-kernel",
  "thiserror",
 ]

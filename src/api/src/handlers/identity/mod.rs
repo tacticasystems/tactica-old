@@ -4,7 +4,10 @@ use axum::{Json, Router, debug_handler, extract::State, routing::post};
 use serde::Deserialize;
 use tactica_kernel::api_error::{ApiError, ApiResult};
 use tactica_module_identity::{
-    models::account::{Account, CreateAccountRequest, EmailAddress, EmailAddressError},
+    models::{
+        account::{Account, AccountId, CreateAccountRequest, EmailAddress, EmailAddressError},
+        identity::CreateIdentityRequest,
+    },
     ports::IdentityService,
 };
 use thiserror::Error;
@@ -48,9 +51,19 @@ impl ApiError for ParseCreateAccountRequestError {
 }
 
 impl CreateAccountBody {
-    pub fn into_domain(&self) -> Result<CreateAccountRequest, ParseCreateAccountRequestError> {
+    pub fn into_account_domain(
+        &self,
+    ) -> Result<CreateAccountRequest, ParseCreateAccountRequestError> {
         let email = EmailAddress::new(&self.email)?;
         Ok(CreateAccountRequest::new(email))
+    }
+
+    pub fn into_identity_domain(
+        &self,
+        account_id: AccountId,
+    ) -> Result<CreateIdentityRequest, ParseCreateAccountRequestError> {
+        let password = self.password.clone();
+        Ok(CreateIdentityRequest::new(account_id, password))
     }
 }
 
@@ -72,9 +85,12 @@ async fn create_account(
     State(svc): State<Arc<dyn IdentityService>>,
     Json(body): Json<CreateAccountBody>,
 ) -> ApiResult<Json<CreateAccountResponse>> {
-    let domain_req = body.into_domain()?;
-    Ok(svc
-        .create_account(&domain_req)
-        .await
-        .map(|ref account| Json(account.into()))?)
+    let domain_req = body.into_account_domain()?;
+    let account = svc.create_account(&domain_req).await?;
+
+    let identity_req = body.into_identity_domain(account.id().clone())?;
+
+    svc.create_identity(&identity_req).await?;
+
+    Ok(Json((&account).into()))
 }

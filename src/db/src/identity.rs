@@ -5,7 +5,9 @@ use sqlx::Executor;
 use tactica_module_identity::{
     models::{
         account::{Account, AccountId, CreateAccountError, CreateAccountRequest},
-        identity::{CreateIdentityError, CreateIdentityRequest, Identity, IdentityId},
+        identity::{
+            CreateIdentityError, CreateIdentityRequest, Identity, IdentityData, IdentityId,
+        },
     },
     ports::{AccountRepository, IdentityRepository},
 };
@@ -71,11 +73,15 @@ impl IdentityRepository for Postgres {
 
         let id = Uuid::now_v7();
         let account_id = req.account_id().into_untyped_uuid();
+        let data = IdentityData::Password(req.password().clone());
+        let data_json =
+            serde_json::to_value(&data).map_err(|e| CreateIdentityError::Unknown(e.into()))?;
 
         let query = sqlx::query!(
-            "INSERT INTO identity (identity_id, account_id, data) VALUES ($1, $2, '{}')",
+            r#"INSERT INTO identity (identity_id, account_id, data) VALUES ($1, $2, $3)"#,
             id,
             account_id,
+            data_json,
         );
 
         tx.execute(query)
@@ -89,6 +95,7 @@ impl IdentityRepository for Postgres {
         Ok(Identity::new(
             IdentityId::from_untyped_uuid(id),
             req.account_id().clone(),
+            data,
         ))
     }
 }

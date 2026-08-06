@@ -15,6 +15,12 @@ pub trait IdentityService: Send + Sync + 'static {
         &self,
         req: &CreateAccountRequest,
     ) -> Result<Account, CreateAccountError>;
+
+    /// Create a new [Identity] for the given [Account]
+    async fn create_identity(
+        &self,
+        req: &CreateIdentityRequest,
+    ) -> Result<Identity, CreateIdentityError>;
 }
 
 /// `AccountRepository` represents a store of Account data.
