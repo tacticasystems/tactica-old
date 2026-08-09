@@ -17,7 +17,15 @@ features = ["native-tls", "postgres", "sqlx-toml"]
 
 [tasks.build]
 description = "Compile the whole workspace (debug, locked deps)"
+depends = ["build-rs", "build-web"]
+
+[tasks.build-rs]
+description = "Compile the whole workspace (debug, locked deps)"
 run = "cargo build --workspace --locked"
+
+[tasks.build-web]
+description = "Compile the whole workspace (debug, locked deps)"
+run = "pnpm --dir web run build"
 
 [tasks.build-release]
 description = "Compile the release binary we ship"
@@ -28,12 +36,28 @@ description = "Install Rust components required by project tasks"
 run = "rustup component add rustfmt clippy llvm-tools-preview"
 
 [tasks.test]
+description = "Compile the whole workspace (debug, locked deps)"
+depends = ["test-rs", "test-web"]
+
+[tasks.test-web]
+description = "Run the web test suite"
+run = "pnpm --dir web run test"
+
+[tasks.test-rs]
 description = "Hermetic test suite: unit + serde + validation (no cluster, no network); also compile-checks feature-gated targets"
 run = "cargo test --workspace --locked"
 
-[tasks.clippy]
+[tasks.lint]
+description = "Lint the whole workspace (Rust + web)"
+depends = ["lint-rs", "lint-web"]
+
+[tasks.lint-rs]
 description = "Clippy across the workspace incl. feature-gated targets, warnings are errors"
 run = "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings"
+
+[tasks.lint-web]
+description = "Run the web linter"
+run = "pnpm --dir web run lint"
 
 [tasks.fmt]
 description = "Format Rust and Markdown files"
@@ -50,6 +74,14 @@ run = "cargo fmt --all"
 [tasks.fmt-rs-check]
 description = "Check formatting of Rust files"
 run = "cargo fmt --all -- --check"
+
+[tasks.fmt-web]
+description = "Format Web files"
+run = "pnpm --dir web run fmt"
+
+[tasks.fmt-web-check]
+description = "Check formatting of Web files"
+run = "pnpm --dir web run fmt-check"
 
 [tasks.fmt-docs]
 description = "Format Markdown files"

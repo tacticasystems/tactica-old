@@ -8,9 +8,9 @@ import { queryClient } from "./query-client";
 import "./styles.css";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} context={{ queryClient }} />
-    </QueryClientProvider>
-  </StrictMode>,
+	<StrictMode>
+		<QueryClientProvider client={queryClient}>
+			<RouterProvider router={router} context={{ queryClient }} />
+		</QueryClientProvider>
+	</StrictMode>,
 );
