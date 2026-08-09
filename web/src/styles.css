@@ -8,6 +8,48 @@ body {
   margin: 0;
 }
 
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+  max-width: 24rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.app-header {
+  align-items: center;
+  background: #202124;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+}
+
+.app-header a {
+  color: inherit;
+}
+
+.brand {
+  font-weight: 700;
+  text-decoration: none;
+}
+
 main {
   box-sizing: border-box;
   min-height: 100vh;

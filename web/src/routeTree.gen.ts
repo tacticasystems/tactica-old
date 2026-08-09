@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrgSlugRouteImport } from './routes/$orgSlug'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as OrgsRouteImport } from './routes/orgs'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -18,6 +19,11 @@ import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugRoute = OrgSlugRouteImport.update({
+  id: '/$orgSlug',
+  path: '/$orgSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -43,6 +49,7 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$orgSlug': typeof OrgSlugRoute
   '/auth': typeof AuthRouteWithChildren
   '/orgs': typeof OrgsRoute
   '/auth/login': typeof AuthLoginRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$orgSlug': typeof OrgSlugRoute
   '/auth': typeof AuthRouteWithChildren
   '/orgs': typeof OrgsRoute
   '/auth/login': typeof AuthLoginRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$orgSlug': typeof OrgSlugRoute
   '/auth': typeof AuthRouteWithChildren
   '/orgs': typeof OrgsRoute
   '/auth/login': typeof AuthLoginRoute
@@ -65,15 +74,24 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/orgs' | '/auth/login' | '/auth/verify-email'
+  fullPaths:
+    '/' | '/$orgSlug' | '/auth' | '/orgs' | '/auth/login' | '/auth/verify-email'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/orgs' | '/auth/login' | '/auth/verify-email'
+  to:
+    '/' | '/$orgSlug' | '/auth' | '/orgs' | '/auth/login' | '/auth/verify-email'
   id:
-    '__root__' | '/' | '/auth' | '/orgs' | '/auth/login' | '/auth/verify-email'
+    | '__root__'
+    | '/'
+    | '/$orgSlug'
+    | '/auth'
+    | '/orgs'
+    | '/auth/login'
+    | '/auth/verify-email'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrgSlugRoute: typeof OrgSlugRoute
   AuthRoute: typeof AuthRouteWithChildren
   OrgsRoute: typeof OrgsRoute
 }
@@ -85,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$orgSlug': {
+      id: '/$orgSlug'
+      path: '/$orgSlug'
+      fullPath: '/$orgSlug'
+      preLoaderRoute: typeof OrgSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -132,6 +157,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrgSlugRoute: OrgSlugRoute,
   AuthRoute: AuthRouteWithChildren,
   OrgsRoute: OrgsRoute,
 }
