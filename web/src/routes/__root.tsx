@@ -4,6 +4,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import { NotFound } from "../components/not-found";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  component: () => <Outlet />,
-  notFoundComponent: NotFound,
+	component: () => <Outlet />,
+	notFoundComponent: NotFound,
 });
