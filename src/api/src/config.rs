@@ -30,6 +30,8 @@ pub struct ApiConfig {
     pub max_request_body_size: usize,
     /// Browser origins trusted by CORS and authentication.
     pub cors_allowed_origins: Vec<url::Url>,
+    /// Optional parent domain that lets the web app read the CSRF cookie.
+    pub csrf_cookie_domain: Option<String>,
     /// Client-address proxy policy.
     pub proxy_mode: ProxyMode,
 }
@@ -52,6 +54,7 @@ impl Default for ApiConfig {
             cors_allowed_origins: vec![
                 Url::parse("http://localhost:5173").expect("Failed to build default config"),
             ],
+            csrf_cookie_domain: None,
             proxy_mode: ProxyMode::Direct,
         }
     }

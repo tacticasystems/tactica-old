@@ -29,12 +29,14 @@ pub use state::AppState;
 
 /// Builds the complete HTTP router.
 pub fn router(cfg: ApiConfig, state: AppState) -> Router {
-    let state = state.with_trusted_origins(
-        cfg.cors_allowed_origins
-            .iter()
-            .map(|url| url.origin().ascii_serialization())
-            .collect(),
-    );
+    let state = state
+        .with_trusted_origins(
+            cfg.cors_allowed_origins
+                .iter()
+                .map(|url| url.origin().ascii_serialization())
+                .collect(),
+        )
+        .with_csrf_cookie_domain(cfg.csrf_cookie_domain.clone());
     let middleware = ServiceBuilder::new()
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(

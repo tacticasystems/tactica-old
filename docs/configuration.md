@@ -43,6 +43,7 @@ the process exits while loading configuration.
 | `api.graceful_shutdown_timeout` | duration                 | 10 seconds                | `TACTICA_API__GRACEFUL_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout value.                                                            |
 | `api.max_request_body_size`     | unsigned integer (bytes) | 1 MiB (1048576 bytes)     | `TACTICA_API__MAX_REQUEST_BODY_SIZE`     | Maximum request body size.                                                                  |
 | `api.cors_allowed_origins`      | list of URLs             | `[http://localhost:5173]` | `TACTICA_API__CORS_ALLOWED_ORIGINS`      | Origins allowed by CORS.                                                                    |
+| `api.csrf_cookie_domain`        | optional domain          | unset                     | `TACTICA_API__CSRF_COOKIE_DOMAIN`        | Parent cookie domain readable by the web app, such as `.tactica.systems`.                   |
 | `api.proxy_mode`                | `Direct` or `Trusted`    | `Direct`                  | `TACTICA_API__PROXY_MODE`                | Whether requests are treated as coming directly from the client or through a trusted proxy. |
 
 `request_timeout` and `graceful_shutdown_timeout` use
@@ -86,6 +87,7 @@ export TACTICA_API__REQUEST_TIMEOUT='{secs=30,nanos=0}'
 export TACTICA_API__GRACEFUL_SHUTDOWN_TIMEOUT='{secs=10,nanos=0}'
 export TACTICA_API__MAX_REQUEST_BODY_SIZE='1048576'
 export TACTICA_API__CORS_ALLOWED_ORIGINS='["https://app.example.com"]'
+export TACTICA_API__CSRF_COOKIE_DOMAIN='.tactica.systems'
 export TACTICA_API__PROXY_MODE='Direct'
 ```
 

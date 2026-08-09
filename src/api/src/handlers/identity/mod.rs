@@ -224,7 +224,11 @@ async fn register(
         .identity_service
         .register(email, &body.password)
         .await?;
-    Ok(issue_response(issued, cookie_mode))
+    Ok(issue_response(
+        issued,
+        cookie_mode,
+        state.csrf_cookie_domain.as_deref(),
+    ))
 }
 
 async fn login(
@@ -236,10 +240,26 @@ async fn login(
     let cookie_mode = trusted_origin(&state, &headers)?.is_some();
     let email = EmailAddress::new(&body.email)?;
     let issued = state.identity_service.login(email, &body.password).await?;
-    Ok(issue_response(issued, cookie_mode))
+    Ok(issue_response(
+        issued,
+        cookie_mode,
+        state.csrf_cookie_domain.as_deref(),
+    ))
 }
 
-fn issue_response(issued: IssuedSession, cookie_mode: bool) -> Response {
+fn csrf_cookie(value: &str, domain: Option<&str>, expired: bool) -> String {
+    let domain = domain
+        .map(|value| format!("; Domain={value}"))
+        .unwrap_or_default();
+    let expiry = expired.then_some("; Max-Age=0").unwrap_or_default();
+    format!("{CSRF_COOKIE}={value}; Path=/{expiry}{domain}; Secure; SameSite=Lax")
+}
+
+fn issue_response(
+    issued: IssuedSession,
+    cookie_mode: bool,
+    csrf_cookie_domain: Option<&str>,
+) -> Response {
     let body = AuthResponse {
         account_id: issued.current.account_id.to_string(),
         email_verified: issued.current.email_verified,
@@ -257,11 +277,8 @@ fn issue_response(issued: IssuedSession, cookie_mode: bool) -> Response {
         );
         response.headers_mut().append(
             SET_COOKIE,
-            HeaderValue::from_str(&format!(
-                "{CSRF_COOKIE}={}; Path=/api/v1; Secure; SameSite=Lax",
-                issued.csrf_token
-            ))
-            .unwrap(),
+            HeaderValue::from_str(&csrf_cookie(&issued.csrf_token, csrf_cookie_domain, false))
+                .unwrap(),
         );
     } else {
         response.headers_mut().append(
@@ -272,9 +289,7 @@ fn issue_response(issued: IssuedSession, cookie_mode: bool) -> Response {
         );
         response.headers_mut().append(
             SET_COOKIE,
-            HeaderValue::from_static(
-                "tactica_csrf=; Path=/api/v1; Max-Age=0; Secure; SameSite=Lax",
-            ),
+            HeaderValue::from_str(&csrf_cookie("", csrf_cookie_domain, true)).unwrap(),
         );
     }
     response
@@ -292,7 +307,7 @@ async fn logout(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<
     );
     response.headers_mut().append(
         SET_COOKIE,
-        HeaderValue::from_static("tactica_csrf=; Path=/api/v1; Max-Age=0; Secure; SameSite=Lax"),
+        HeaderValue::from_str(&csrf_cookie("", state.csrf_cookie_domain.as_deref(), true)).unwrap(),
     );
     Ok(response)
 }
@@ -462,6 +477,14 @@ mod tests {
                 .unwrap()
                 .get("session_token")
                 .is_none()
+        );
+    }
+
+    #[test]
+    fn csrf_cookie_is_readable_by_the_web_app_domain() {
+        assert_eq!(
+            super::csrf_cookie("token", Some(".tactica.systems"), false),
+            "tactica_csrf=token; Path=/; Domain=.tactica.systems; Secure; SameSite=Lax"
         );
     }
 
