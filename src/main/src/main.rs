@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use clap::Parser;
 use tactica_api::AppState;
+use tactica_module_identity::{models::account::EmailAddress, ports::VerificationNotifier};
 use tokio::sync::oneshot;
 
 use crate::{config::Config, shutdown::shutdown_signal, telemetry::init_telemetry};
@@ -9,6 +11,20 @@ use crate::{config::Config, shutdown::shutdown_signal, telemetry::init_telemetry
 mod config;
 mod shutdown;
 mod telemetry;
+
+struct DevelopmentVerificationNotifier;
+
+#[async_trait]
+impl VerificationNotifier for DevelopmentVerificationNotifier {
+    async fn send_verification_code(
+        &self,
+        email: &EmailAddress,
+        code: &str,
+    ) -> Result<(), anyhow::Error> {
+        tracing::info!(email = %email, verification_code = code, "development email verification code issued");
+        Ok(())
+    }
+}
 
 #[derive(Parser)]
 pub struct Args {
@@ -31,9 +47,9 @@ async fn main() -> anyhow::Result<()> {
     match args.command {
         Command::Serve => {
             let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-            let shutdown_timeout = config.api.graceful_shutdown_timeout.clone();
+            let shutdown_timeout = config.api.graceful_shutdown_timeout;
 
-            let listener = tokio::net::TcpListener::bind(config.api.bind_addr.clone())
+            let listener = tokio::net::TcpListener::bind(config.api.bind_addr)
                 .await
                 .expect("Failed to bind to address");
 
@@ -43,8 +59,15 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .expect("Failed to initialize database");
 
-            let identity_service =
-                tactica_module_identity::service::Service::new(db.clone(), db.clone());
+            db.migrate()
+                .await
+                .expect("Failed to run database migrations");
+
+            let identity_service = tactica_module_identity::service::Service::new(
+                db.clone(),
+                DevelopmentVerificationNotifier,
+                config.auth,
+            );
 
             let router = tactica_api::router(config.api, AppState::new(Arc::new(identity_service)));
 

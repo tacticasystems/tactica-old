@@ -1,5 +1,10 @@
+//! Shared cross-cutting types used by Tactica components.
+#![deny(missing_docs)]
+
+/// Standard API error contracts.
 pub mod api_error;
 
+/// Implements a UUIDv7-derived `created_at` accessor for a model.
 #[macro_export]
 macro_rules! impl_created_at {
     ($model:ident) => {

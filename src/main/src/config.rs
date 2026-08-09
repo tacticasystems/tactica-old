@@ -2,6 +2,7 @@ use figment::{Figment, providers::Env};
 use serde::Deserialize;
 use tactica_api::config::ApiConfig;
 use tactica_db::config::DatabaseConfig;
+use tactica_module_identity::service::AuthConfig;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -13,13 +14,17 @@ pub struct Config {
 
     #[serde(default)]
     pub database: DatabaseConfig,
+
+    #[serde(default)]
+    pub auth: AuthConfig,
 }
 
 impl Config {
-    pub fn load() -> Result<Self, figment::Error> {
+    pub fn load() -> Result<Self, Box<figment::Error>> {
         Figment::new()
             .merge(Env::prefixed("TACTICA_").split("__"))
             .extract()
+            .map_err(Box::new)
     }
 }
 

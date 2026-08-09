@@ -1,8 +1,13 @@
+//! PostgreSQL adapters for Tactica modules.
+#![deny(missing_docs)]
+
 use std::str::FromStr;
 
 use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 
+/// PostgreSQL connection configuration.
 pub mod config;
+/// Identity and session repository implementations.
 pub mod identity;
 
 /// A postgres database connection pool.
@@ -12,6 +17,7 @@ pub struct Postgres {
 }
 
 impl Postgres {
+    /// Connects a PostgreSQL pool from configuration.
     pub async fn new(config: config::DatabaseConfig) -> Result<Self, anyhow::Error> {
         let pool = PgPoolOptions::new()
             .max_connections(config.max_connections)
@@ -21,5 +27,10 @@ impl Postgres {
             .await?;
 
         Ok(Self { pool })
+    }
+
+    /// Applies all pending embedded migrations.
+    pub async fn migrate(&self) -> Result<(), sqlx::migrate::MigrateError> {
+        sqlx::migrate!().run(&self.pool).await
     }
 }

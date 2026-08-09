@@ -15,6 +15,14 @@ url.workspace = true
 serde.workspace = true
 http.workspace = true
 thiserror.workspace = true
+chrono.workspace = true
 
 tactica-kernel = { workspace = true, features = ["axum"] }
 tactica-module-identity.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+newtype-uuid.workspace = true
+uuid.workspace = true
+async-trait.workspace = true
+tokio.workspace = true

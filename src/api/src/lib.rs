@@ -1,5 +1,9 @@
+//! HTTP API composition and authentication handlers.
+#![deny(missing_docs)]
+
 use axum::{Router, routing::get};
 
+/// Serves an Axum router on an asynchronous listener.
 pub use axum::serve;
 use http::StatusCode;
 use tower::ServiceBuilder;
@@ -13,13 +17,24 @@ use tower_http::{
 
 use crate::config::ApiConfig;
 
+/// API configuration.
 pub mod config;
+/// HTTP route handlers.
 pub mod handlers;
+/// Shared application state.
 pub mod state;
 
+/// State shared by API handlers.
 pub use state::AppState;
 
+/// Builds the complete HTTP router.
 pub fn router(cfg: ApiConfig, state: AppState) -> Router {
+    let state = state.with_trusted_origins(
+        cfg.cors_allowed_origins
+            .iter()
+            .map(|url| url.origin().ascii_serialization())
+            .collect(),
+    );
     let middleware = ServiceBuilder::new()
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(
@@ -74,11 +89,11 @@ pub fn router(cfg: ApiConfig, state: AppState) -> Router {
             StatusCode::REQUEST_TIMEOUT,
             cfg.request_timeout,
         ))
-        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid::default()));
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
 
     Router::new()
         .route("/healthz", get(|| async { "OK" }))
-        .nest("/api", api_router())
+        .nest("/api/v1", api_router())
         .layer(middleware)
         .with_state(state)
 }

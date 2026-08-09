@@ -20,6 +20,8 @@ below are recommended.
 The top-level sections are:
 
 - `api`
+- `auth`
+- `database`
 - `telemetry`
 
 If an environment value cannot be deserialised, or a required value is missing,
@@ -33,15 +35,15 @@ the process exits while loading configuration.
 
 ## api
 
-| option | type | default | environment variable | description |
-| --- | --- | --- | --- | --- |
-| `api.bind_addr` | socket address | `0.0.0.0:8080` | `TACTICA_API__BIND_ADDR` | Local address and port on which the HTTP listener binds. |
-| `api.public_base_url` | URL | `http://localhost:8080` | `TACTICA_API__PUBLIC_BASE_URL` | Public URL for the running API. |
-| `api.request_timeout` | duration | 30 seconds | `TACTICA_API__REQUEST_TIMEOUT` | Request timeout value. |
-| `api.graceful_shutdown_timeout` | duration | 10 seconds | `TACTICA_API__GRACEFUL_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout value. |
-| `api.max_request_body_size` | unsigned integer (bytes) | 1 MiB (1048576 bytes) | `TACTICA_API__MAX_REQUEST_BODY_SIZE` | Maximum request body size. |
-| `api.cors_allowed_origins` | list of URLs | `[http://localhost:5173]` | `TACTICA_API__CORS_ALLOWED_ORIGINS` | Origins allowed by CORS. |
-| `api.proxy_mode` | `Direct` or `Trusted` | `Direct` | `TACTICA_API__PROXY_MODE` | Whether requests are treated as coming directly from the client or through a trusted proxy. |
+| option                          | type                     | default                   | environment variable                     | description                                                                                 |
+| ------------------------------- | ------------------------ | ------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `api.bind_addr`                 | socket address           | `0.0.0.0:8080`            | `TACTICA_API__BIND_ADDR`                 | Local address and port on which the HTTP listener binds.                                    |
+| `api.public_base_url`           | URL                      | `http://localhost:8080`   | `TACTICA_API__PUBLIC_BASE_URL`           | Public URL for the running API.                                                             |
+| `api.request_timeout`           | duration                 | 30 seconds                | `TACTICA_API__REQUEST_TIMEOUT`           | Request timeout value.                                                                      |
+| `api.graceful_shutdown_timeout` | duration                 | 10 seconds                | `TACTICA_API__GRACEFUL_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout value.                                                            |
+| `api.max_request_body_size`     | unsigned integer (bytes) | 1 MiB (1048576 bytes)     | `TACTICA_API__MAX_REQUEST_BODY_SIZE`     | Maximum request body size.                                                                  |
+| `api.cors_allowed_origins`      | list of URLs             | `[http://localhost:5173]` | `TACTICA_API__CORS_ALLOWED_ORIGINS`      | Origins allowed by CORS.                                                                    |
+| `api.proxy_mode`                | `Direct` or `Trusted`    | `Direct`                  | `TACTICA_API__PROXY_MODE`                | Whether requests are treated as coming directly from the client or through a trusted proxy. |
 
 `request_timeout` and `graceful_shutdown_timeout` use
 `std::time::Duration`. Figment's environment provider expects the duration's
@@ -87,14 +89,24 @@ export TACTICA_API__CORS_ALLOWED_ORIGINS='["https://app.example.com"]'
 export TACTICA_API__PROXY_MODE='Direct'
 ```
 
-The code currently sets `max_request_body_size` to `1 * 1024 * 1024`, which is
-1048576 bytes (1 MiB).
+The code currently sets `max_request_body_size` to 1048576 bytes (1 MiB).
+
+## authentication
+
+Authentication durations are configurable with Figment's `{secs=...,nanos=...}` duration syntax.
+
+| option                      | default  | environment variable                 | description                                     |
+| --------------------------- | -------- | ------------------------------------ | ----------------------------------------------- |
+| `auth.idle_timeout`         | 30 days  | `TACTICA_AUTH__IDLE_TIMEOUT`         | Inactivity window before a Session expires.     |
+| `auth.absolute_timeout`     | 180 days | `TACTICA_AUTH__ABSOLUTE_TIMEOUT`     | Maximum Session lifetime.                       |
+| `auth.refresh_interval`     | 1 hour   | `TACTICA_AUTH__REFRESH_INTERVAL`     | Minimum interval between sliding-expiry writes. |
+| `auth.verification_timeout` | 24 hours | `TACTICA_AUTH__VERIFICATION_TIMEOUT` | Email verification challenge lifetime.          |
 
 ## telemetry
 
-| option | type | default | environment variable | description |
-| --- | --- | --- | --- | --- |
-| `telemetry.log_level` | tracing filter string | `info` | `TACTICA_TELEMETRY__LOG_LEVEL` | Fallback filter used when `RUST_LOG` is not set or cannot be parsed. |
+| option                | type                  | default | environment variable           | description                                                          |
+| --------------------- | --------------------- | ------- | ------------------------------ | -------------------------------------------------------------------- |
+| `telemetry.log_level` | tracing filter string | `info`  | `TACTICA_TELEMETRY__LOG_LEVEL` | Fallback filter used when `RUST_LOG` is not set or cannot be parsed. |
 
 `RUST_LOG` takes precedence at startup because telemetry first tries
 `EnvFilter::try_from_default_env()`. For example:
