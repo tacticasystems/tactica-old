@@ -164,7 +164,7 @@ where
         if password.chars().count() < 15 || password.len() > 256 {
             return Err(AuthError::InvalidPassword);
         }
-        let salt = SaltString::generate(&mut argon2::password_hash::rand_core::OsRng);
+        let salt = SaltString::generate(&mut rand_core::OsRng);
         let hash = Self::argon2()?
             .hash_password(password.as_bytes(), &salt)
             .map_err(|e| AuthError::Unknown(anyhow::anyhow!(e)))?

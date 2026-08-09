@@ -8,6 +8,7 @@ use tactica_module_identity::ports::IdentityService;
 pub struct AppState {
     pub(crate) identity_service: Arc<dyn IdentityService>,
     pub(crate) trusted_origins: Arc<Vec<String>>,
+    pub(crate) csrf_cookie_domain: Option<Arc<str>>,
 }
 
 impl AppState {
@@ -16,11 +17,17 @@ impl AppState {
         Self {
             identity_service,
             trusted_origins: Arc::new(Vec::new()),
+            csrf_cookie_domain: None,
         }
     }
 
     pub(crate) fn with_trusted_origins(mut self, origins: Vec<String>) -> Self {
         self.trusted_origins = Arc::new(origins);
+        self
+    }
+
+    pub(crate) fn with_csrf_cookie_domain(mut self, domain: Option<String>) -> Self {
+        self.csrf_cookie_domain = domain.map(Arc::from);
         self
     }
 }

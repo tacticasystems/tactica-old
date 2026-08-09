@@ -6,6 +6,7 @@ use axum::{Router, routing::get};
 /// Serves an Axum router on an asynchronous listener.
 pub use axum::serve;
 use http::StatusCode;
+use http::header::{CONTENT_TYPE, HeaderName};
 use tower::ServiceBuilder;
 use tower_http::{
     cors::{AllowOrigin, CorsLayer},
@@ -29,12 +30,14 @@ pub use state::AppState;
 
 /// Builds the complete HTTP router.
 pub fn router(cfg: ApiConfig, state: AppState) -> Router {
-    let state = state.with_trusted_origins(
-        cfg.cors_allowed_origins
-            .iter()
-            .map(|url| url.origin().ascii_serialization())
-            .collect(),
-    );
+    let state = state
+        .with_trusted_origins(
+            cfg.cors_allowed_origins
+                .iter()
+                .map(|url| url.origin().ascii_serialization())
+                .collect(),
+        )
+        .with_csrf_cookie_domain(cfg.csrf_cookie_domain.clone());
     let middleware = ServiceBuilder::new()
         .layer(PropagateRequestIdLayer::x_request_id())
         .layer(
@@ -82,7 +85,8 @@ pub fn router(cfg: ApiConfig, state: AppState) -> Router {
                     http::Method::POST,
                     http::Method::DELETE,
                     http::Method::HEAD,
-                ]),
+                ])
+                .allow_headers([CONTENT_TYPE, HeaderName::from_static("x-csrf-token")]),
         )
         .layer(RequestBodyLimitLayer::new(cfg.max_request_body_size))
         .layer(TimeoutLayer::with_status_code(
