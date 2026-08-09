@@ -16,6 +16,14 @@ A person represented in an organisation roster. A Person does not need an
 Account.
 _Avoid_: Account, user
 
+**Organisation**:
+A product workspace within which roster and other operational work is organised.
+_Avoid_: organisation account, tenant
+
+**Organisation slug**:
+The human-readable identifier used to address an Organisation in product URLs.
+_Avoid_: organisation ID, organisation name
+
 **Identity**:
 A means by which an Account authenticates, such as a password or an external
 provider identity. Each Identity belongs to exactly one Account.
