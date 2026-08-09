@@ -5,9 +5,56 @@ experimental = true
 _.file = ".env"
 
 [tools]
-rust = "1.96.0"
+rust = { version = "1.97.1", components = "rustfmt,clippy,llvm-tools-preview" }
+oxfmt = "0.62.0"
+"aqua:EmbarkStudios/cargo-deny" = "0.20.2"
+"aqua:taiki-e/cargo-llvm-cov" = "0.8.7"
 
 [tools."cargo:sqlx-cli"]
 version = "0.9.0"
 default-features = false
 features = ["native-tls", "postgres", "sqlx-toml"]
+
+[tasks.build]
+description = "Compile the whole workspace (debug, locked deps)"
+run = "cargo build --workspace --locked"
+
+[tasks.build-release]
+description = "Compile the release binary we ship"
+run = "cargo build --release --locked -p tactica"
+
+[tasks.rust-components]
+description = "Install Rust components required by project tasks"
+run = "rustup component add rustfmt clippy llvm-tools-preview"
+
+[tasks.test]
+description = "Hermetic test suite: unit + serde + validation (no cluster, no network); also compile-checks feature-gated targets"
+run = "cargo test --workspace --locked"
+
+[tasks.clippy]
+description = "Clippy across the workspace incl. feature-gated targets, warnings are errors"
+run = "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings"
+
+[tasks.fmt]
+description = "Format Rust and Markdown files"
+depends = ["fmt-rs", "fmt-docs"]
+
+[tasks.fmt-check]
+description = "Check formatting of Rust and Markdown files"
+depends = ["fmt-rs-check", "fmt-docs-check"]
+
+[tasks.fmt-rs]
+description = "Format Rust files"
+run = "cargo fmt --all"
+
+[tasks.fmt-rs-check]
+description = "Check formatting of Rust files"
+run = "cargo fmt --all -- --check"
+
+[tasks.fmt-docs]
+description = "Format Markdown files"
+run = "find -type f -name '*.md' -exec oxfmt {} +"
+
+[tasks.fmt-docs-check]
+description = "Check formatting of Markdown files"
+run = "find -type f -name '*.md' -exec oxfmt --check {} +"
