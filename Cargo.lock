@@ -2025,6 +2025,7 @@ dependencies = [
  "newtype-uuid",
  "newtype-uuid-macros",
  "rand 0.9.5",
+ "rand_core 0.6.4",
  "serde",
  "serde_json",
  "sha2",

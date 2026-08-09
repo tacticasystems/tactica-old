@@ -6,6 +6,7 @@ use axum::{Router, routing::get};
 /// Serves an Axum router on an asynchronous listener.
 pub use axum::serve;
 use http::StatusCode;
+use http::header::{CONTENT_TYPE, HeaderName};
 use tower::ServiceBuilder;
 use tower_http::{
     cors::{AllowOrigin, CorsLayer},
@@ -84,7 +85,8 @@ pub fn router(cfg: ApiConfig, state: AppState) -> Router {
                     http::Method::POST,
                     http::Method::DELETE,
                     http::Method::HEAD,
-                ]),
+                ])
+                .allow_headers([CONTENT_TYPE, HeaderName::from_static("x-csrf-token")]),
         )
         .layer(RequestBodyLimitLayer::new(cfg.max_request_body_size))
         .layer(TimeoutLayer::with_status_code(

@@ -248,11 +248,22 @@ async fn login(
 }
 
 fn csrf_cookie(value: &str, domain: Option<&str>, expired: bool) -> String {
+    csrf_cookie_with_path(value, "/", domain, expired)
+}
+
+fn csrf_cookie_with_path(value: &str, path: &str, domain: Option<&str>, expired: bool) -> String {
     let domain = domain
         .map(|value| format!("; Domain={value}"))
         .unwrap_or_default();
     let expiry = expired.then_some("; Max-Age=0").unwrap_or_default();
-    format!("{CSRF_COOKIE}={value}; Path=/{expiry}{domain}; Secure; SameSite=Lax")
+    format!("{CSRF_COOKIE}={value}; Path={path}{expiry}{domain}; Secure; SameSite=Lax")
+}
+
+fn expire_legacy_csrf_cookie(response: &mut Response) {
+    response.headers_mut().append(
+        SET_COOKIE,
+        HeaderValue::from_static("tactica_csrf=; Path=/api/v1; Max-Age=0; Secure; SameSite=Lax"),
+    );
 }
 
 fn issue_response(
@@ -312,12 +323,11 @@ async fn logout(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<
     Ok(response)
 }
 
-async fn session(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-) -> ApiResult<Json<SessionResponse>> {
+async fn session(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Response> {
+    let cookie_auth = matches!(credentials(&headers)?, Some(Transport::Cookie(_)));
+    let csrf_token = cookie(&headers, CSRF_COOKIE).map(str::to_owned);
     let current = authenticated(&state, &headers, false).await?;
-    Ok(Json(SessionResponse {
+    let mut response = Json(SessionResponse {
         account_id: current.account_id.to_string(),
         email_verified: current.email_verified,
         session: SessionTimes {
@@ -325,7 +335,23 @@ async fn session(
             idle_expires_at: current.idle_expires_at,
             absolute_expires_at: current.absolute_expires_at,
         },
-    }))
+    })
+    .into_response();
+    if cookie_auth {
+        if let Some(csrf_token) = csrf_token {
+            response.headers_mut().append(
+                SET_COOKIE,
+                HeaderValue::from_str(&csrf_cookie(
+                    &csrf_token,
+                    state.csrf_cookie_domain.as_deref(),
+                    false,
+                ))
+                .expect("validated CSRF cookie attributes"),
+            );
+        }
+        expire_legacy_csrf_cookie(&mut response);
+    }
+    Ok(response)
 }
 
 async fn verify_email(
@@ -480,6 +506,30 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn cors_preflight_allows_json_and_csrf_headers() {
+        let request = Request::builder()
+            .method("OPTIONS")
+            .uri("/api/v1/auth/login")
+            .header(ORIGIN, "http://localhost:5173")
+            .header("access-control-request-method", "POST")
+            .header(
+                "access-control-request-headers",
+                "content-type,x-csrf-token",
+            )
+            .body(Body::empty())
+            .unwrap();
+        let response = app().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response
+                .headers()
+                .get("access-control-allow-headers")
+                .unwrap(),
+            "content-type,x-csrf-token"
+        );
+    }
+
     #[test]
     fn csrf_cookie_is_readable_by_the_web_app_domain() {
         assert_eq!(
@@ -526,6 +576,33 @@ mod tests {
         assert_eq!(
             app().oneshot(request).await.unwrap().status(),
             StatusCode::FORBIDDEN
+        );
+    }
+
+    #[tokio::test]
+    async fn session_migrates_legacy_csrf_cookie_path() {
+        let request = Request::builder()
+            .uri("/api/v1/auth/session")
+            .header("cookie", "tactica_session=valid; tactica_csrf=csrf-token")
+            .body(Body::empty())
+            .unwrap();
+        let response = app().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let cookies: Vec<_> = response
+            .headers()
+            .get_all(SET_COOKIE)
+            .iter()
+            .map(|value| value.to_str().unwrap())
+            .collect();
+        assert!(
+            cookies
+                .iter()
+                .any(|value| value.contains("Path=/;") && value.contains("csrf-token"))
+        );
+        assert!(
+            cookies
+                .iter()
+                .any(|value| value.contains("Path=/api/v1") && value.contains("Max-Age=0"))
         );
     }
 }

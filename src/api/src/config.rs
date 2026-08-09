@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, num::NonZeroUsize, time::Duration};
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer, de};
 use url::Url;
 
 /// Describes how the API derives the connecting client address.
@@ -31,9 +31,42 @@ pub struct ApiConfig {
     /// Browser origins trusted by CORS and authentication.
     pub cors_allowed_origins: Vec<url::Url>,
     /// Optional parent domain that lets the web app read the CSRF cookie.
+    #[serde(default, deserialize_with = "deserialize_csrf_cookie_domain")]
     pub csrf_cookie_domain: Option<String>,
     /// Client-address proxy policy.
     pub proxy_mode: ProxyMode,
+}
+
+fn deserialize_csrf_cookie_domain<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::<String>::deserialize(deserializer)?
+        .map(validate_csrf_cookie_domain)
+        .transpose()
+        .map_err(de::Error::custom)
+}
+
+fn validate_csrf_cookie_domain(value: String) -> Result<String, &'static str> {
+    if value.is_empty() || value.trim() != value || value.ends_with('.') {
+        return Err("CSRF cookie domain must be a non-empty domain name");
+    }
+
+    let domain = value.strip_prefix('.').unwrap_or(&value);
+    if domain.is_empty()
+        || domain.split('.').any(|label| {
+            label.is_empty()
+                || label.starts_with('-')
+                || label.ends_with('-')
+                || !label
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+        })
+    {
+        return Err("CSRF cookie domain must contain only valid domain labels");
+    }
+
+    Ok(value.to_ascii_lowercase())
 }
 
 impl ApiConfig {
@@ -57,5 +90,24 @@ impl Default for ApiConfig {
             csrf_cookie_domain: None,
             proxy_mode: ProxyMode::Direct,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_csrf_cookie_domain;
+
+    #[test]
+    fn csrf_cookie_domain_is_normalized() {
+        assert_eq!(
+            validate_csrf_cookie_domain(".TACTICA.SYSTEMS".into()).unwrap(),
+            ".tactica.systems"
+        );
+    }
+
+    #[test]
+    fn csrf_cookie_domain_rejects_cookie_attributes() {
+        assert!(validate_csrf_cookie_domain(".tactica.systems; Secure".into()).is_err());
+        assert!(validate_csrf_cookie_domain("https://tactica.systems".into()).is_err());
     }
 }

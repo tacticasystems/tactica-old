@@ -29,7 +29,7 @@ function VerifyEmailPage() {
     try {
       const code = new FormData(event.currentTarget).get("code");
       await verifyEmail(typeof code === "string" ? code : "");
-      await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
+      await queryClient.refetchQueries({ queryKey: sessionQueryKey, type: "all" });
       await navigate({ to: "/orgs" });
     } catch {
       setError("That verification code is invalid or expired");

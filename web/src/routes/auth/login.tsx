@@ -39,7 +39,7 @@ function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(credentials);
-      await queryClient.invalidateQueries({ queryKey: sessionQueryKey });
+      await queryClient.refetchQueries({ queryKey: sessionQueryKey, type: "all" });
       await navigate({ to: returnTo ?? "/orgs" });
     } catch (cause) {
       setError(isUnauthorized(cause) ? "Invalid email or password" : "Unable to sign in right now");
