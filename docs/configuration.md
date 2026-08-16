@@ -27,11 +27,9 @@ The top-level sections are:
 If an environment value cannot be deserialised, or a required value is missing,
 the process exits while loading configuration.
 
-> **Important:** `api` has defaults only when the whole section is absent.
-> `ApiConfig` does not define defaults on its individual fields, so setting any
-> `TACTICA_API__...` variable means that all API fields must be supplied. The
-> complete API example below is the safest starting point for an
-> environment-based deployment.
+> **Important:** API defaults are applied per field. You can set any individual
+> `TACTICA_API__...` variable and the remaining API options retain their
+> defaults.
 
 ## api
 
@@ -77,8 +75,7 @@ TACTICA_API__CORS_ALLOWED_ORIGINS='["https://a.example","https://b.example"]'
 
 ### complete api example
 
-Because API defaults are not retained for partial nested environment
-configuration, set every API field together:
+To override every API option explicitly:
 
 ```sh
 export TACTICA_API__BIND_ADDR='0.0.0.0:8080'

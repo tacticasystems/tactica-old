@@ -397,6 +397,7 @@ mod tests {
         ports::{AuthError, IdentityService},
     };
     use tower::ServiceExt;
+    use url::Url;
     use uuid::Uuid;
 
     use crate::{AppState, config::ApiConfig};
@@ -448,8 +449,12 @@ mod tests {
         }
     }
 
+    fn app_with_config(config: ApiConfig) -> axum::Router {
+        crate::router(config, AppState::new(Arc::new(FakeService)))
+    }
+
     fn app() -> axum::Router {
-        crate::router(ApiConfig::default(), AppState::new(Arc::new(FakeService)))
+        app_with_config(ApiConfig::default())
     }
 
     fn registration() -> Request<Body> {
@@ -527,6 +532,30 @@ mod tests {
                 .get("access-control-allow-headers")
                 .unwrap(),
             "content-type,x-csrf-token"
+        );
+    }
+
+    #[tokio::test]
+    async fn cors_normalizes_configured_origins() {
+        let mut config = ApiConfig::default();
+        config.cors_allowed_origins = vec![Url::parse("http://localhost:5173/").unwrap()];
+        let request = Request::builder()
+            .method("OPTIONS")
+            .uri("/api/v1/auth/login")
+            .header(ORIGIN, "http://localhost:5173")
+            .header("access-control-request-method", "POST")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app_with_config(config).oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response
+                .headers()
+                .get("access-control-allow-origin")
+                .unwrap(),
+            "http://localhost:5173"
         );
     }
 

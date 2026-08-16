@@ -73,11 +73,14 @@ pub fn router(cfg: ApiConfig, state: AppState) -> Router {
         )
         .layer(
             CorsLayer::new()
-                .allow_origin(AllowOrigin::list(
-                    cfg.cors_allowed_origins
-                        .iter()
-                        .map(|e| e.as_str().parse().expect("Invalid CORS origin")),
-                ))
+                .allow_origin(AllowOrigin::list(cfg.cors_allowed_origins.iter().map(
+                    |e| {
+                        e.origin()
+                            .ascii_serialization()
+                            .parse()
+                            .expect("Invalid CORS origin")
+                    },
+                )))
                 .allow_credentials(true)
                 .allow_methods(vec![
                     http::Method::GET,

@@ -17,6 +17,7 @@ pub enum ProxyMode {
 
 /// Configures the HTTP API server and middleware.
 #[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
 pub struct ApiConfig {
     /// Local socket on which the API listens.
     pub bind_addr: SocketAddr,
